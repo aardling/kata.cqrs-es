@@ -19,10 +19,7 @@ public class DaySchedule
         var daySchedule = new DaySchedule();
         foreach(var historicEvent in historicEvents)
         {
-            if (historicEvent is SlotWasScheduled scheduledEvent)
-            {
-                daySchedule.Apply(scheduledEvent);
-            }
+            daySchedule.Apply(historicEvent);
         }
 
         return daySchedule;
@@ -46,7 +43,7 @@ public class DaySchedule
             PatientId = patientId
         };
 
-        _recordedEvents.Add(slotWasBooked);
+        RecordThat(slotWasBooked);
     }
 
     internal void ScheduleSlot(Guid slotId, Guid doctorId, DateTime startDate, DateTime endDate)
@@ -62,8 +59,7 @@ public class DaySchedule
             SlotId = slotId
         };
 
-        _recordedEvents.Add(slotWasScheduled);
-        Apply(slotWasScheduled);
+        RecordThat(slotWasScheduled);
     }
 
     private void Apply(SlotWasScheduled evt)
@@ -74,5 +70,19 @@ public class DaySchedule
             StartDate = evt.StartDate,
             EndDate = evt.EndDate
         });
+    }
+
+    private void Apply(IEvent evt)
+    {
+        if (evt is SlotWasScheduled scheduledEvent)
+        {
+            Apply(scheduledEvent);
+        }
+    }
+
+    private void RecordThat(IEvent evt)
+    {
+        _recordedEvents.Add(evt);
+        Apply(evt);
     }
 }
