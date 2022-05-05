@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using CQRS.UpHealth.Commands;
+using CQRS.UpHealth.CustomExceptions;
 using CQRS.UpHealth.Events;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -50,5 +51,26 @@ public class BookSlotCommandHandlerTest : CommandHandlerTest<BookSlot>
         };
 
         Then(new List<IEvent>() { slotWasBookedEvent});
+    }
+
+    [TestMethod]
+    public void ShouldNotBookAnUnexistingSlot()
+    {
+        var doctorId = Guid.NewGuid();
+        var startDate = DateTime.Now;
+        var patientId = Guid.NewGuid();
+        var slotId = Guid.NewGuid();
+
+        Given(new List<(string, IEvent)>() { });
+
+        When(new BookSlot
+        {
+            SlotId = slotId,
+            PatientId = patientId,
+            DoctorId = doctorId,
+            StartDate = startDate
+        });
+
+        Then<UnexistingSlotException>();
     }
 }
