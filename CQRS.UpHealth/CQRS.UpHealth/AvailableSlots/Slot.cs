@@ -1,6 +1,6 @@
 ﻿namespace CQRS.UpHealth.AvailableSlots;
 
-public class AvailableSlot
+public class Slot
 {
     public Guid SlotId { get; set; }
     public DateTime StartTime { get; set; }

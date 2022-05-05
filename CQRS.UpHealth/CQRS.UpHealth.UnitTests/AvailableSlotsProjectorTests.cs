@@ -36,4 +36,55 @@ public class AvailableSlotsProjectorTests
         Assert.IsTrue(slots.Count == 1);
     }
 
+    [TestMethod]
+    public void ItShouldNotReturnBookedSlots()
+    {
+        var eventStore = new EventStore();
+        var projector = new AvailableSlotsProjector(eventStore);
+        var slotId = Guid.NewGuid();
+        eventStore.AddEvent("", new SlotWasScheduled()
+        {
+            DoctorId = Guid.NewGuid(),
+            SlotId = slotId,
+            StartDate = DateTime.Now,
+            EndDate = DateTime.Now.AddMinutes(20)
+        });
+
+        eventStore.AddEvent("", new SlotWasBooked()
+        {
+            PatientId = Guid.NewGuid(),
+            SlotId = slotId
+        });
+        var slots = projector.GetAllAvailableSlotsForDay(DateTime.Now);
+        Assert.IsTrue(slots.Count == 0);
+    }
+
+    [TestMethod]
+    public void ItShouldMakeCancelledBookingSlotsAvailableAgain()
+    {
+        var eventStore = new EventStore();
+        var projector = new AvailableSlotsProjector(eventStore);
+        var slotId = Guid.NewGuid();
+        eventStore.AddEvent("", new SlotWasScheduled()
+        {
+            DoctorId = Guid.NewGuid(),
+            SlotId = slotId,
+            StartDate = DateTime.Now,
+            EndDate = DateTime.Now.AddMinutes(20)
+        });
+
+        eventStore.AddEvent("", new SlotWasBooked()
+        {
+            PatientId = Guid.NewGuid(),
+            SlotId = slotId
+        });
+
+        eventStore.AddEvent("", new BookingWasCanceled()
+        {
+            SlotId = slotId
+        });
+        var slots = projector.GetAllAvailableSlotsForDay(DateTime.Now);
+        Assert.IsTrue(slots.Count == 1);
+    }
+
 }

@@ -4,10 +4,13 @@ namespace CQRS.UpHealth.AvailableSlots;
 
 public class AvailableSlotsProjector : IProjector
 {
-    private List<AvailableSlot> _availableSlots;
+    private List<Slot> _availableSlots;
+    private List<Slot> _bookedSlots;
     public AvailableSlotsProjector(EventStore eventStore)
     {
-        _availableSlots = new List<AvailableSlot>();
+        _availableSlots = new List<Slot>();
+        _bookedSlots = new List<Slot>();
+
         eventStore.SubscribeProjector(this);
     }
 
@@ -21,11 +24,15 @@ public class AvailableSlotsProjector : IProjector
         {
             Project(bookedEvent);
         }
+        if (evt is BookingWasCanceled canceledEvent)
+        {
+            Project(canceledEvent);
+        }
     }
 
     public void Project(SlotWasScheduled evt)
     {
-        _availableSlots.Add(new AvailableSlot()
+        _availableSlots.Add(new Slot()
         {
             SlotId = evt.SlotId,
             DocterId = evt.DoctorId,
@@ -38,9 +45,17 @@ public class AvailableSlotsProjector : IProjector
     {
         var slot = _availableSlots.Find(x => x.SlotId == evt.SlotId);
         _availableSlots.Remove(slot);
+        _bookedSlots.Add(slot);
     }
 
-    public List<AvailableSlot> GetAllAvailableSlotsForDay(DateTime day)
+    public void Project(BookingWasCanceled evt)
+    {
+        var slot = _bookedSlots.Find(x => x.SlotId == evt.SlotId);
+        _bookedSlots.Remove(slot);
+        _availableSlots.Add(slot);
+    }
+
+    public List<Slot> GetAllAvailableSlotsForDay(DateTime day)
     {
         return _availableSlots.Where(s => s.StartTime.Date == day.Date).ToList();
     }
