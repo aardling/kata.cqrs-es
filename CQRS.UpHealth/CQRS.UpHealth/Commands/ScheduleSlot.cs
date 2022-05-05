@@ -1,6 +1,6 @@
 ﻿namespace CQRS.UpHealth.Commands
 {
-    public class ScheduleSlot : ICommand
+    public record ScheduleSlot : ICommand
     {
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
