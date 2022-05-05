@@ -25,6 +25,7 @@ namespace CQRS.UpHealth.UnitTests
                 DoctorId = System.Guid.NewGuid(),
                 EndDate = System.DateTime.Now.AddMinutes(20),
                 StartDate = System.DateTime.Now,
+                SlotId = Guid.NewGuid()
             };
 
             When(command);
@@ -34,6 +35,7 @@ namespace CQRS.UpHealth.UnitTests
                 StartDate = command.StartDate,
                 EndDate = command.EndDate,
                 DoctorId = command.DoctorId,
+                SlotId = command.SlotId
             };
 
             Then(new List<IEvent>() { expectedSlotWasScheduled });

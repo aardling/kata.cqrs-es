@@ -31,6 +31,7 @@ namespace CQRS.UpHealth
                 StartDate = scheduleSlot.StartDate,
                 EndDate = scheduleSlot.EndDate,
                 DoctorId = scheduleSlot.DoctorId,
+                SlotId = scheduleSlot.SlotId
             };
 
             _eventStore.AddEvent(streamId, slotWasScheduled);
