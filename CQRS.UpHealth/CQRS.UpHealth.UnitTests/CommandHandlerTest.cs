@@ -4,8 +4,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CQRS.UpHealth.UnitTests
 {
@@ -21,11 +19,13 @@ namespace CQRS.UpHealth.UnitTests
             _historicEvents = new List<IEvent>();
 
         }
-        protected void Then(List<IEvent> expectedEvents)
+        protected void Then(List<IEvent> newEvents)
         {
             _handler.Handle(_command);
 
             var actualEvents = _eventStore.GetEvents();
+            var expectedEvents = new List<IEvent>(_historicEvents);
+            expectedEvents.AddRange(newEvents);
 
             Assert.IsTrue(actualEvents.SequenceEqual(expectedEvents));
         }
