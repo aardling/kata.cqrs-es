@@ -37,6 +37,11 @@ public class DaySchedule
             throw new UnexistingSlotException();
         }
 
+        if (_slots.Any(s => s.Id == slotId && s.Booked))
+        {
+            throw new SlotAlreadyBookedException();
+        }
+
         var slotWasBooked = new SlotWasBooked
         {
             SlotId = slotId,
@@ -72,11 +77,22 @@ public class DaySchedule
         });
     }
 
+    private void Apply(SlotWasBooked evt)
+    {
+        var slot = _slots.First(s => s.Id == evt.SlotId);
+     
+        slot.Booked = true;
+    }
+
     private void Apply(IEvent evt)
     {
         if (evt is SlotWasScheduled scheduledEvent)
         {
             Apply(scheduledEvent);
+        }
+        if (evt is SlotWasBooked bookedEvent)
+        {
+            Apply(bookedEvent);
         }
     }
 
