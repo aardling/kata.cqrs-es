@@ -6,12 +6,12 @@ namespace CQRS.UpHealth.Domain;
 public class DaySchedule
 {
     private List<IEvent> _recordedEvents;
-    private List<Guid> _slotIds;
+    private List<Slot> _slots;
     
     private DaySchedule()
     {
         _recordedEvents = new List<IEvent>();
-        _slotIds = new List<Guid>();
+        _slots = new List<Slot>();
     }
 
     public static DaySchedule FromHistory(IEnumerable<IEvent> historicEvents)
@@ -24,7 +24,12 @@ public class DaySchedule
                 continue;
             }
 
-            daySchedule._slotIds.Add(scheduledEvent.SlotId);
+            daySchedule._slots.Add(new Slot()
+            {
+                Id = scheduledEvent.SlotId,
+                StartDate = scheduledEvent.StartDate,
+                EndDate = scheduledEvent.EndDate,
+            });
         }
 
         return daySchedule;
@@ -37,7 +42,7 @@ public class DaySchedule
 
     internal void BookSlot(Guid slotId, Guid patientId)
     {
-        if(!_slotIds.Contains(slotId))
+        if(!_slots.Any(s => s.Id == slotId))
         {
             throw new UnexistingSlotException();
         }
@@ -49,5 +54,21 @@ public class DaySchedule
         };
 
         _recordedEvents.Add(slotWasBooked);
+    }
+
+    internal void ScheduleSlot(Guid slotId, Guid doctorId, DateTime startDate, DateTime endDate)
+    {
+        if (_slots.Any(s => startDate <= s.EndDate && endDate >= s.StartDate))
+            throw new SlotsCannotOverlapException();
+
+        var slotWasScheduled = new SlotWasScheduled()
+        {
+            StartDate = startDate,
+            EndDate = endDate,
+            DoctorId = doctorId,
+            SlotId = slotId
+        };
+
+        _recordedEvents.Add(slotWasScheduled);
     }
 }
