@@ -6,12 +6,12 @@ namespace CQRS.UpHealth.Domain;
 public class DaySchedule
 {
     private List<IEvent> _recordedEvents;
-    private List<Guid> _slotIds;
+    private List<Slot> _slots;
     
     private DaySchedule()
     {
         _recordedEvents = new List<IEvent>();
-        _slotIds = new List<Guid>();
+        _slots = new List<Slot>();
     }
 
     public static DaySchedule FromHistory(IEnumerable<IEvent> historicEvents)
@@ -19,12 +19,7 @@ public class DaySchedule
         var daySchedule = new DaySchedule();
         foreach(var historicEvent in historicEvents)
         {
-            if (historicEvent is not SlotWasScheduled scheduledEvent)
-            {
-                continue;
-            }
-
-            daySchedule._slotIds.Add(scheduledEvent.SlotId);
+            daySchedule.Apply(historicEvent);
         }
 
         return daySchedule;
@@ -37,9 +32,14 @@ public class DaySchedule
 
     internal void BookSlot(Guid slotId, Guid patientId)
     {
-        if(!_slotIds.Contains(slotId))
+        if(!_slots.Any(s => s.Id == slotId))
         {
             throw new UnexistingSlotException();
+        }
+
+        if (_slots.Any(s => s.Id == slotId && s.Booked))
+        {
+            throw new SlotAlreadyBookedException();
         }
 
         var slotWasBooked = new SlotWasBooked
@@ -48,6 +48,57 @@ public class DaySchedule
             PatientId = patientId
         };
 
-        _recordedEvents.Add(slotWasBooked);
+        RecordThat(slotWasBooked);
+    }
+
+    internal void ScheduleSlot(Guid slotId, Guid doctorId, DateTime startDate, DateTime endDate)
+    {
+        if (_slots.Any(s => startDate <= s.EndDate && endDate >= s.StartDate))
+            throw new SlotsCannotOverlapException();
+
+        var slotWasScheduled = new SlotWasScheduled()
+        {
+            StartDate = startDate,
+            EndDate = endDate,
+            DoctorId = doctorId,
+            SlotId = slotId
+        };
+
+        RecordThat(slotWasScheduled);
+    }
+
+    private void Apply(SlotWasScheduled evt)
+    {
+        _slots.Add(new Slot()
+        {
+            Id = evt.SlotId,
+            StartDate = evt.StartDate,
+            EndDate = evt.EndDate
+        });
+    }
+
+    private void Apply(SlotWasBooked evt)
+    {
+        var slot = _slots.First(s => s.Id == evt.SlotId);
+     
+        slot.Booked = true;
+    }
+
+    private void Apply(IEvent evt)
+    {
+        if (evt is SlotWasScheduled scheduledEvent)
+        {
+            Apply(scheduledEvent);
+        }
+        if (evt is SlotWasBooked bookedEvent)
+        {
+            Apply(bookedEvent);
+        }
+    }
+
+    private void RecordThat(IEvent evt)
+    {
+        _recordedEvents.Add(evt);
+        Apply(evt);
     }
 }

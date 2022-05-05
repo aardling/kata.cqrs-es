@@ -1,5 +1,6 @@
 ﻿using CQRS.UpHealth.Commands;
 using CQRS.UpHealth.CustomExceptions;
+using CQRS.UpHealth.Domain;
 using CQRS.UpHealth.Events;
 
 namespace CQRS.UpHealth
@@ -17,24 +18,15 @@ namespace CQRS.UpHealth
             var streamId = $"{scheduleSlot.DoctorId}/{scheduleSlot.StartDate.ToString("yyyy/MM/dd")}";
             var events = _eventStore.GetEventsByStream(streamId);
 
-            foreach(var historyEvent in events)
-            {
-                if (historyEvent is not SlotWasScheduled scheduledEvent)
-                    continue;
+            var daySchedule = DaySchedule.FromHistory(events);
+            daySchedule.ScheduleSlot(scheduleSlot.SlotId, scheduleSlot.DoctorId, scheduleSlot.StartDate, scheduleSlot.EndDate);
 
-                if (scheduleSlot.StartDate <= scheduledEvent.EndDate && scheduleSlot.EndDate >= scheduledEvent.StartDate)
-                    throw new SlotsCannotOverlapException();
+            var recordedEvents = daySchedule.GetRecordedEvents();
+
+            foreach (var recordedEvent in recordedEvents)
+            {
+                _eventStore.AddEvent(streamId, recordedEvent);
             }
-
-            var slotWasScheduled = new SlotWasScheduled()
-            {
-                StartDate = scheduleSlot.StartDate,
-                EndDate = scheduleSlot.EndDate,
-                DoctorId = scheduleSlot.DoctorId,
-                SlotId = scheduleSlot.SlotId
-            };
-
-            _eventStore.AddEvent(streamId, slotWasScheduled);
         }
     }
 }
