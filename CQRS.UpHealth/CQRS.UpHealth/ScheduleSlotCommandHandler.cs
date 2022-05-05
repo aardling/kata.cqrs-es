@@ -22,10 +22,6 @@ namespace CQRS.UpHealth
                 if (historyEvent is not SlotWasScheduled scheduledEvent)
                     continue;
 
-                if(!scheduledEvent.DoctorId.Equals(scheduleSlot.DoctorId))
-                {
-                    continue;
-                }
                 if (scheduleSlot.StartDate <= scheduledEvent.EndDate && scheduleSlot.EndDate >= scheduledEvent.StartDate)
                     throw new SlotsCannotOverlapException();
             }
