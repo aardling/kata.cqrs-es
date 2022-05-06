@@ -7,7 +7,7 @@ public class DaySchedule
 {
     private List<IEvent> _recordedEvents;
     private List<Slot> _slots;
-    
+
     private DaySchedule()
     {
         _recordedEvents = new List<IEvent>();
@@ -17,7 +17,7 @@ public class DaySchedule
     public static DaySchedule FromHistory(IEnumerable<IEvent> historicEvents)
     {
         var daySchedule = new DaySchedule();
-        foreach(var historicEvent in historicEvents)
+        foreach (var historicEvent in historicEvents)
         {
             daySchedule.Apply(historicEvent);
         }
@@ -32,12 +32,13 @@ public class DaySchedule
 
     internal void BookSlot(Guid slotId, Guid patientId)
     {
-        if(!_slots.Any(s => s.Id == slotId))
+        if (!_slots.Any(s => s.Id == slotId))
         {
             throw new UnexistingSlotException();
         }
 
-        if (_slots.Any(s => s.Id == slotId && s.Booked))
+        var slot = _slots.First(s => s.Id == slotId);
+        if (slot.Booked)
         {
             throw new SlotAlreadyBookedException();
         }
@@ -45,7 +46,9 @@ public class DaySchedule
         var slotWasBooked = new SlotWasBooked
         {
             SlotId = slotId,
-            PatientId = patientId
+            PatientId = patientId,
+            StartDate = slot.StartDate,
+            EndDate = slot.EndDate,
         };
 
         RecordThat(slotWasBooked);
@@ -80,7 +83,7 @@ public class DaySchedule
     private void Apply(SlotWasBooked evt)
     {
         var slot = _slots.First(s => s.Id == evt.SlotId);
-     
+
         slot.Booked = true;
     }
 
