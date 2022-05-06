@@ -6,14 +6,14 @@ namespace CQRS.UpHealth
     public class EventStore
     {
         private List<(string, IEvent)> _events = new ();
-        private List<IProjector> _subscriptions = new();
+        private List<IEventListener> _subscriptions = new();
 
         public void AddEvent(string streamId, IEvent newEvent)
         {
             _events.Add(new(streamId, newEvent));
             foreach(var subscriber in _subscriptions)
             {
-                subscriber.Project(newEvent);
+                subscriber.When(newEvent);
             }
         }
 
@@ -27,9 +27,9 @@ namespace CQRS.UpHealth
             return _events.Where(e => e.Item1.Equals(streamId)).Select(t => t.Item2);
         }
 
-        public void SubscribeProjector(IProjector projector)
+        public void Subscribe(IEventListener eventListener)
         {
-            _subscriptions.Add(projector);
+            _subscriptions.Add(eventListener);
         }
     }
 }

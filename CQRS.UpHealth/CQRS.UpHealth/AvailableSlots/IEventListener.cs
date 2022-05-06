@@ -2,7 +2,7 @@
 
 namespace CQRS.UpHealth.AvailableSlots;
 
-public interface IProjector
+public interface IEventListener
 {
-    void Project(IEvent evt);
+    void When(IEvent evt);
 }

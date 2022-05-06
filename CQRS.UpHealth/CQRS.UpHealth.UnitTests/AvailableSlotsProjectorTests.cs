@@ -14,7 +14,7 @@ public class AvailableSlotsProjectorTests
         
         var eventStore = new EventStore();
 
-        var projector = new AvailableSlotsProjector(eventStore);
+        var projector = new AvailableSlotsEventListener(eventStore);
         var slots = projector.GetAllAvailableSlotsForDay(DateTime.Now);
         Assert.IsTrue(slots.Count == 0);
     }
@@ -23,7 +23,7 @@ public class AvailableSlotsProjectorTests
     public void ItShouldReturnAvailableSlots()
     {
         var eventStore = new EventStore();
-        var projector = new AvailableSlotsProjector(eventStore);
+        var projector = new AvailableSlotsEventListener(eventStore);
 
         eventStore.AddEvent("", new SlotWasScheduled()
         {
@@ -40,7 +40,7 @@ public class AvailableSlotsProjectorTests
     public void ItShouldNotReturnBookedSlots()
     {
         var eventStore = new EventStore();
-        var projector = new AvailableSlotsProjector(eventStore);
+        var projector = new AvailableSlotsEventListener(eventStore);
         var slotId = Guid.NewGuid();
         eventStore.AddEvent("", new SlotWasScheduled()
         {
@@ -63,7 +63,7 @@ public class AvailableSlotsProjectorTests
     public void ItShouldMakeCancelledBookingSlotsAvailableAgain()
     {
         var eventStore = new EventStore();
-        var projector = new AvailableSlotsProjector(eventStore);
+        var projector = new AvailableSlotsEventListener(eventStore);
         var slotId = Guid.NewGuid();
         eventStore.AddEvent("", new SlotWasScheduled()
         {

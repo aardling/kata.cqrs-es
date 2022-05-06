@@ -2,19 +2,19 @@
 
 namespace CQRS.UpHealth.AvailableSlots;
 
-public class AvailableSlotsProjector : IProjector
+public class AvailableSlotsEventListener : IEventListener
 {
     private List<Slot> _availableSlots;
     private List<Slot> _bookedSlots;
-    public AvailableSlotsProjector(EventStore eventStore)
+    public AvailableSlotsEventListener(EventStore eventStore)
     {
         _availableSlots = new List<Slot>();
         _bookedSlots = new List<Slot>();
 
-        eventStore.SubscribeProjector(this);
+        eventStore.Subscribe(this);
     }
 
-    public void Project(IEvent evt)
+    public void When(IEvent evt)
     {
         if (evt is SlotWasScheduled scheduledEvent)
         {
